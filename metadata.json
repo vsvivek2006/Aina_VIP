@@ -1,0 +1,6 @@
+{
+  "name": "Escort Directory",
+  "description": "A directory listing page featuring a categorized sidebar and a responsive grid of profiles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
