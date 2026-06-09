@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { Phone, Mail, MessageSquare, CheckCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Phone, Mail, MessageSquare, CheckCircle, Search, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Hotels() {
   const [showAllHotels, setShowAllHotels] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
 
+  // Top 5 Highlighted Hotels for the top banner cards
   const topHotels = [
     { name: 'Pllazio Hotel', desc: 'Here you will discover proficient escort benefits in Gurgaon close to The Pllazio Hotel', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=600&h=400', path: '/hotels/pllazio' },
     { name: 'Bristol Hotel', desc: 'Spice up your night with these gorgeous escorts available near Bristol Hotel in gurgoan', image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=600&h=400', path: '/hotels/bristol' },
@@ -16,30 +18,53 @@ export default function Hotels() {
     { name: 'Taj City Centre Hotel', desc: 'Experience the best call girl escorts near Taj City Centre Hotel available for premium clients', image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&q=80&w=600&h=400', path: '/hotels/taj' },
   ];
 
-  const hotelList1 = [
-    'Taj City Centre Hotel', 'Courtyard by Marriott Hotel', 'Hyatt Regency Hotel', 'Hilton Garden Inn Hotel',
-    'Trident Hotel', 'ITC Grand Bharat Hotel', 'Le Meridien Hotel', 'Crowne Plaza Hotel',
-    'Radisson Hotel', 'Anya Hotel', 'DoubleTree by Hilton Hotel', 'Westin Hotel'
+  // 1. Luxury / 5-Star Hotels (From Image)
+  const luxuryHotels = [
+    'Trident, Gurgaon', 'The Oberoi, Gurgaon', 'The Westin Gurgaon, New Delhi',
+    'Le Méridien Gurgaon, Delhi NCR', 'Taj City Centre Gurugram',
+    'The Leela Ambience Gurugram Hotel & Residences', 'ITC Grand Bharat'
   ];
 
-  const hotelList2 = [
-    'Ahuja Residency DLF Phase 2', 'Asian Suites HUDA City Centre', 'Asian Suites IFFCO Metro Station', 'Bloom Boutique Hotel',
-    'Chaupal Hotel and Banquet', 'Citrus Check Inns', 'Clarens Hotel', 'Corporate Stays Suncity',
-    'Country Inn and Suites', 'DLF City Club 4 Hotel', 'DoubleTree by Hilton', 'Eddison Hotel',
-    'FabHotel Premium Nest', 'Fortune Select Global', 'Gazebo Inn and Suites', 'Golden Tulip Hotel',
-    'Grand Hyatt Hotel', 'Heritage Village Resorts', 'Holiday Inn Sector 90', 'HollyHocks Residency Hotel',
-    'Hotel Anandam', 'Hotel AZAD Square', 'Hotel City Premier', 'Hotel DS Clarks Inn',
-    'Hotel Golf View Suites', 'Hotel Green Earth', 'Hotel Hyatt Place', 'Hotel Imperial Park',
-    'Hotel Indiyaah Inn', 'Hotel Levante', 'Hotel Mulberry Retreat', 'Hotel Redbrick Villa',
-    'Hotel Sai Village', 'Hotel Tavisha Villa', 'Inde Hotel Cyber City', 'Inde Hotel Signature Tower',
-    'Inde Hotel Vista Woods', 'iSTAY LushGreen Villa', 'Kabul Hotel Medanta', 'Lemon Tree Hotel Sohna',
-    'Lemon Tree Premier 1', 'Lemon Tree Premier 2', 'Paradise inn hotel', 'Park Inn Hotel',
-    'Park Plaza Gurugram', 'Quality Inn Hotel', 'Ramada Gurgaon Central', 'Rosewood Apartment Hotel',
-    'Royal Residence MG Road', 'Savoy Suites Manesar', 'Square 9 Inn Hotel', 'Staayz Premium Hotel',
-    'The Atara Hotel', 'The Iris A Boutique Hotel', 'The Palms Town', 'Treebo IFFCO Chowk',
-    'Treebo Premium Eden Residency', 'Treebo White Castle', 'TreeHouse Queens Pearl', 'Trinity Corporate Suites',
-    'Tulalip Hotel', 'Vivid Boutique Hotel'
+  // 2. Popular Business & Premium Hotels (From Image)
+  const businessPremiumHotels = [
+    'Radisson Hotel Sector 29 Gurugram', 'Crowne Plaza Gurgaon, an IHG Hotel',
+    'The Pllazio Hotel', 'Golden Tulip, Sector 29, Gurugram',
+    'Lemon Tree Premier, City Center, Gurugram', 'Lemon Tree Premier-1, Leisure Valley, Gurugram',
+    'Lemon Tree Premier, Leisure Valley 2, Gurugram', 'Dia Park Premier Hotel',
+    'CLARENS HOTEL', 'The Bristol Hotel, Gurgaon 5 Star Deluxe Hotel',
+    'DoubleTree by Hilton Hotel Gurgaon - New Delhi NCR', 'The Place Gurugram, a member of Radisson Individuals',
+    'Nemesia City Center - Gurugram, Sector 29', 'Lemon Tree Hotel, Sector 60 - Gurugram',
+    'ibis Gurgaon Golf Course Road'
   ];
+
+  // 3. Budget & Mid-Range Hotels (From Image)
+  const budgetMidRangeHotels = [
+    'Country Inn & Suites by Radisson, Gurgaon Sector 12', 'Park Inn, Gurgaon',
+    'Skycity Hotel Gurgaon', 'DS Clarks Inn Gurgaon', 'Quality Inn Gurgaon',
+    'Hotel 91 HUDA City Centre Gurgaon', 'Five Elements Hotel Gurugram (The Claire)'
+  ];
+
+  // 4. Other Previous Hotels (From old code to not lose data)
+  const otherHotels = [
+    'Courtyard by Marriott Hotel', 'Hyatt Regency Hotel', 'Hilton Garden Inn Hotel', 'Anya Hotel', 
+    'Ahuja Residency DLF Phase 2', 'Asian Suites HUDA City Centre', 'Asian Suites IFFCO Metro Station', 
+    'Bloom Boutique Hotel', 'Chaupal Hotel and Banquet', 'Citrus Check Inns', 'Corporate Stays Suncity',
+    'DLF City Club 4 Hotel', 'Eddison Hotel', 'FabHotel Premium Nest', 'Fortune Select Global', 
+    'Gazebo Inn and Suites', 'Grand Hyatt Hotel', 'Heritage Village Resorts', 'Holiday Inn Sector 90', 
+    'HollyHocks Residency Hotel', 'Hotel Anandam', 'Hotel AZAD Square', 'Hotel City Premier', 
+    'Hotel Golf View Suites', 'Hotel Green Earth', 'Hotel Hyatt Place', 'Hotel Imperial Park', 
+    'Hotel Indiyaah Inn', 'Hotel Levante', 'Hotel Mulberry Retreat', 'Hotel Redbrick Villa', 
+    'Hotel Sai Village', 'Hotel Tavisha Villa', 'Inde Hotel Cyber City', 'Inde Hotel Signature Tower', 
+    'Inde Hotel Vista Woods', 'iSTAY LushGreen Villa', 'Kabul Hotel Medanta', 'Lemon Tree Hotel Sohna', 
+    'Paradise inn hotel', 'Park Plaza Gurugram', 'Ramada Gurgaon Central', 'Rosewood Apartment Hotel', 
+    'Royal Residence MG Road', 'Savoy Suites Manesar', 'Square 9 Inn Hotel', 'Staayz Premium Hotel', 
+    'The Atara Hotel', 'The Iris A Boutique Hotel', 'The Palms Town', 'Treebo IFFCO Chowk', 
+    'Treebo Premium Eden Residency', 'Treebo White Castle', 'TreeHouse Queens Pearl', 
+    'Trinity Corporate Suites', 'Tulalip Hotel', 'Vivid Boutique Hotel'
+  ].sort();
+
+  // Combined list for search filtering
+  const allHotelsList = [...luxuryHotels, ...businessPremiumHotels, ...budgetMidRangeHotels, ...otherHotels];
 
   const getHotelPath = (hotelName: string) => {
     const norm = hotelName.toLowerCase();
@@ -58,6 +83,24 @@ export default function Hotels() {
     setFormSubmitted(true);
   };
 
+  // Search Filter logic
+  const filteredHotels = useMemo(() => {
+    if (!searchQuery) return [];
+    return allHotelsList.filter(hotel => 
+      hotel.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  // Helper component to render hotel cards
+  const HotelCard = ({ hotel }: { hotel: string }) => (
+    <Link 
+      to={getHotelPath(hotel)} 
+      className="bg-white border border-gray-200 hover:border-[#d4af37] text-[#0f1115] hover:text-[#d4af37] text-center p-4 text-[12px] font-bold tracking-wide transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center min-h-[80px]"
+    >
+      {hotel}
+    </Link>
+  );
+
   return (
     <div className="w-full">
       {/* Hero Banner */}
@@ -70,7 +113,7 @@ export default function Hotels() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0f1115] to-[#1a1d24]/80"></div>
         <div className="relative z-10 text-center flex flex-col items-center mt-4">
           <h1 className="text-white text-4xl md:text-[50px] font-serif font-bold tracking-wide mb-8">
-            Hotels
+            Partner Hotels
           </h1>
           <div className="flex gap-4">
             <a href="tel:9996265679" className="bg-[#d4af37] text-[#0f1115] px-8 py-3.5 text-[12px] font-bold tracking-widest uppercase transition-colors hover:bg-white">
@@ -93,13 +136,7 @@ export default function Hotels() {
           </h2>
           <div className="text-gray-500 font-light text-[15px] leading-[1.8] space-y-6">
             <p>
-              Gurgaon has some of the best hotels in the country. With world-class infrastructure and best-in-class facilities, hotels in Gurgaon offer a leisurely stay for you. All sorts of hotels are available as per your budget. All the hotels are couple friendly and offer safe accommodation. You do not have to worry about your security and privacy. These beautiful hotels offer a luxurious stay and are a hot choice amongst travellers from all over the world. From serene and peaceful views to the best city lights view, you have a lot of options to choose from. Hotels in Gurgaon are available for all sorts of people and have the best facilities, along with the professionally trained staff. Some of the hotels even provide pickup and drop from the airport and chauffeur services.
-            </p>
-            <p>
-              There are various sorts of activities like massage, spa, hair treatments, and jacuzzi available in hotels. With the best hotels like The Westin, The Oberoi, Hyatt, Ramada and The Taj offering you the best view and services like in house swimming pool and restaurants, you do not have to worry about anything apart from spending some relaxing and fun moments with your partner. Also, these hotels are easily accessible through all modes of transport like metro, cabs and also near to the International Airport. You can avail in house shopping facilities as well and these hotels also provide treks and tours to make your stay more interesting. Hotels in Gurgaon provide you a secure environment so that you can enjoy and derive as much pleasure as you want. The rooms are spacious and completely hygienic and all the facilities are available in your room like in-room dining, television and a nice shower to take your stress away. Rooms have the best class beds and equipment.
-            </p>
-            <p>
-              Almost all the hotels in Gurgaon have lounge facilities where you can enjoy and forget the world. Clubs in Gurgaon organize parties every day and you can have a lot of fun at these parties. You can take your companion and dance your heart out to the best music. Hotels in Gurgaon are very much affordable and also provide packages to provide the best to you. Since the staff is trained, you do not have to worry about getting disturbed, you can just relax and enjoy yourself with your partner. They provide the best of everything.
+              Gurgaon has some of the best hotels in the country. With world-class infrastructure and best-in-class facilities, hotels in Gurgaon offer a leisurely stay for you. All sorts of hotels are available as per your budget. All the hotels are couple friendly and offer safe accommodation. You do not have to worry about your security and privacy. These beautiful hotels offer a luxurious stay and are a hot choice amongst travellers from all over the world.
             </p>
           </div>
           <div className="flex gap-4 mt-10">
@@ -112,11 +149,11 @@ export default function Hotels() {
           </div>
         </div>
 
-        {/* Top Hotels */}
-        <div className="mb-20">
+        {/* Top Hotels Showcase */}
+        <div className="mb-16">
           <div className="flex flex-col items-center mb-12">
             <h2 className="text-[32px] md:text-[38px] font-serif font-bold text-[#0f1115] mb-4 text-center">
-              View Gurgaon Top Hotels
+              Top Featured Hotels
             </h2>
             <div className="h-[2px] w-16 bg-[#d4af37]"></div>
           </div>
@@ -135,37 +172,108 @@ export default function Hotels() {
               </Link>
             ))}
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
-            {hotelList1.map((hotel, idx) => {
-              const path = getHotelPath(hotel);
-              return (
-                <Link to={path} key={idx} className="bg-white border border-gray-200 hover:border-[#d4af37] text-[#0f1115] hover:text-[#d4af37] text-center p-4 text-[13px] font-bold uppercase tracking-widest transition-all duration-300 group block shadow-sm hover:shadow-md">
-                  {hotel}
-                </Link>
-              );
-            })}
+        {/* --- Search & Filter Directory --- */}
+        <div className="mb-20">
+          <div className="flex flex-col items-center mb-10 bg-gray-50 py-10 px-4 rounded-sm border border-gray-100 shadow-sm">
+            <h2 className="text-[28px] md:text-[32px] font-serif font-bold text-[#0f1115] mb-4 text-center">
+              Find Your Preferred Hotel
+            </h2>
+            <div className="h-[2px] w-16 bg-[#d4af37] mb-8"></div>
+            
+            {/* Search Input */}
+            <div className="relative w-full max-w-2xl">
+              <input 
+                type="text" 
+                placeholder="Search across Luxury, Business, Premium, or Budget hotels..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-gray-300 px-12 py-4 text-[15px] focus:outline-none focus:border-[#d4af37] transition-colors rounded-none shadow-md"
+              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d4af37]" size={22} />
+            </div>
           </div>
 
-          <div className="text-center mb-10">
-             <button 
-                onClick={() => setShowAllHotels(!showAllHotels)}
-                className="bg-transparent border border-[#0f1115] hover:bg-[#0f1115] hover:text-[#d4af37] text-[#0f1115] px-8 py-3.5 text-[11px] font-bold uppercase tracking-widest transition-colors cursor-pointer"
-             >
-                {showAllHotels ? 'Collapse Locations' : 'Discover All Partners'}
-             </button>
-          </div>
+          {/* Search Results State */}
+          {searchQuery ? (
+            <div>
+              <h3 className="text-xl font-serif font-bold text-[#0f1115] mb-6 flex items-center gap-2">
+                Search Results ({filteredHotels.length})
+              </h3>
+              {filteredHotels.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10 animate-in fade-in duration-300">
+                  {filteredHotels.map((hotel, idx) => <HotelCard key={idx} hotel={hotel} />)}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-10 bg-gray-50 border border-gray-100">
+                  No hotels found matching "{searchQuery}". Try a different keyword.
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Categorized View (Shows when Search is empty) */
+            <div className="space-y-16 animate-in fade-in duration-500">
+              
+              {/* Category 1 */}
+              <div>
+                <h3 className="text-[22px] font-serif font-bold text-[#0f1115] mb-6 border-b-2 border-gray-100 pb-2 flex items-center gap-2">
+                  <span className="w-3 h-3 bg-[#d4af37] inline-block rotate-45"></span> Luxury / 5-Star Hotels
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {luxuryHotels.map((hotel, idx) => <HotelCard key={idx} hotel={hotel} />)}
+                </div>
+              </div>
 
-          {showAllHotels && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-12 animate-in fade-in duration-500 hidden-scroll">
-              {hotelList2.map((hotel, idx) => {
-                const path = getHotelPath(hotel);
-                return (
-                  <Link to={path} key={idx} className="bg-gray-50 border border-gray-100 text-gray-500 hover:bg-white hover:border-[#d4af37] hover:text-[#0f1115] text-center p-3 text-[12px] font-light transition-colors block">
-                    {hotel}
-                  </Link>
-                );
-              })}
+              {/* Category 2 */}
+              <div>
+                <h3 className="text-[22px] font-serif font-bold text-[#0f1115] mb-6 border-b-2 border-gray-100 pb-2 flex items-center gap-2">
+                  <span className="w-3 h-3 bg-[#d4af37] inline-block rotate-45"></span> Popular Business & Premium Hotels
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {businessPremiumHotels.map((hotel, idx) => <HotelCard key={idx} hotel={hotel} />)}
+                </div>
+              </div>
+
+              {/* Category 3 */}
+              <div>
+                <h3 className="text-[22px] font-serif font-bold text-[#0f1115] mb-6 border-b-2 border-gray-100 pb-2 flex items-center gap-2">
+                  <span className="w-3 h-3 bg-[#d4af37] inline-block rotate-45"></span> Budget & Mid-Range Hotels
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {budgetMidRangeHotels.map((hotel, idx) => <HotelCard key={idx} hotel={hotel} />)}
+                </div>
+              </div>
+
+              {/* Toggle for the rest of the old hotels */}
+              <div>
+                <div className="flex items-center justify-between border-b-2 border-gray-100 pb-2 mb-6">
+                  <h3 className="text-[22px] font-serif font-bold text-[#0f1115] flex items-center gap-2">
+                    <span className="w-3 h-3 bg-gray-400 inline-block rotate-45"></span> Other Popular Locations
+                  </h3>
+                  <button 
+                    onClick={() => setShowAllHotels(!showAllHotels)}
+                    className="text-[12px] text-[#d4af37] font-bold uppercase tracking-widest hover:text-[#0f1115] transition-colors"
+                  >
+                    {showAllHotels ? 'Hide Locations' : 'Show All Locations'}
+                  </button>
+                </div>
+
+                {showAllHotels && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                    {otherHotels.map((hotel, idx) => (
+                       <Link 
+                         to={getHotelPath(hotel)} 
+                         key={idx} 
+                         className="bg-gray-50 border border-gray-100 text-gray-500 hover:bg-white hover:border-[#d4af37] hover:text-[#0f1115] text-center p-3 text-[12px] font-light transition-colors block flex items-center justify-center min-h-[60px]"
+                       >
+                         {hotel}
+                       </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </div>
           )}
         </div>
@@ -180,7 +288,7 @@ export default function Hotels() {
             <div className="h-[2px] w-16 bg-[#d4af37]"></div>
           </div>
           <p className="text-gray-400 font-light text-[15px] leading-relaxed mb-14 max-w-5xl mx-auto text-center">
-            The pricing packages for Indian escorts start from 15000 rupees for 2 hours, and for Russian escorts, the package starts from 20000 rupees for 2 hours. These are the basic packages, and for additional services like massage additional charges are payable. The basic pricing package excludes the cost of accommodation. For services with accommodation in 3-star hotel, the package starts from 20000 rupees for 3 hours, for 5-star hotels, package starts from 25000 rupees. We also have different nationalities of girls, and their price varies. We also have packages for long-duration services starting from 30000 rupees you can also check our rates page. Call us to enquire more about pricing packages for the best escort services.
+            The pricing packages for Indian escorts start from 15000 rupees for 2 hours, and for Russian escorts, the package starts from 20000 rupees for 2 hours. These are the basic packages, and for additional services like massage additional charges are payable.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-gray-800 bg-[#1a1d24]">
@@ -244,100 +352,13 @@ export default function Hotels() {
             <div className="absolute top-0 left-0 w-1 h-full bg-[#d4af37]"></div>
             <h2 className="text-[28px] md:text-[34px] font-serif font-bold mb-4 relative z-10">Direct Contact</h2>
             <p className="text-[14px] font-light text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed relative z-10">
-              Contact us 24/7 for Escort Services in Aerocity. You will select the girl of your choice before you confirm your appointment. Call or fill the contact form below to get started.
+              Contact us 24/7 for Escort Services in Aerocity. You will select the girl of your choice before you confirm your appointment.
             </p>
             <a href="tel:9996265679" className="bg-[#d4af37] hover:bg-white text-[#0f1115] px-10 py-4 text-[12px] font-bold uppercase tracking-widest shadow transition-colors inline-block relative z-10">
               Engage Agency
             </a>
           </div>
 
-          {/* Form */}
-          <div className="mt-16 border border-gray-100 flex flex-col md:flex-row shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#d4af37]/5 rounded-full blur-3xl translate-x-1/3 pointer-events-none"></div>
-            
-            <div className="w-full md:w-1/2 min-h-[400px] relative">
-              <img src="https://images.unsplash.com/photo-1542596594-649edbc13630?auto=format&fit=crop&q=80&w=800&h=800" alt="Form side" className="absolute inset-0 w-full h-full object-cover grayscale opacity-90" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0f1115]/90 to-[#0f1115]/50"></div>
-            </div>
-            
-            <div className="w-full md:w-1/2 p-10 md:p-14 bg-white flex flex-col justify-center relative z-10">
-              <div className="mb-10 text-center md:text-left">
-                <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-                   <div className="w-6 h-[1px] bg-[#d4af37]"></div>
-                   <span className="text-[#d4af37] text-[10px] font-bold uppercase tracking-widest">Discrete Coordination</span>
-                </div>
-                <h2 className="text-[28px] md:text-[34px] font-serif font-bold text-[#0f1115] mb-2">Feeling Naughty?</h2>
-                <p className="text-gray-500 font-light text-[14px]">Get real photos of female escorts with phone number</p>
-              </div>
-              
-              {!formSubmitted ? (
-                <form onSubmit={handleFormSubmit} className="space-y-4">
-                  <input 
-                    type="text" 
-                    required 
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    placeholder="Insert Alias" 
-                    className="w-full bg-transparent border-b border-gray-300 px-2 py-3 text-[14px] focus:outline-none focus:border-[#0f1115] placeholder-gray-400 transition-colors" 
-                  />
-                  <input 
-                    type="email" 
-                    required
-                    value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
-                    placeholder="Active Email Check" 
-                    className="w-full bg-transparent border-b border-gray-300 px-2 py-3 text-[14px] focus:outline-none focus:border-[#0f1115] placeholder-gray-400 transition-colors" 
-                  />
-                  <select className="w-full bg-transparent border-b border-gray-300 px-2 py-3 text-[14px] font-light focus:outline-none focus:border-[#0f1115] text-gray-500 transition-colors appearance-none" defaultValue="Gurgaon">
-                    <option>Gurgaon</option>
-                    <option>Delhi</option>
-                    <option>Noida</option>
-                  </select>
-                  <select className="w-full bg-transparent border-b border-gray-300 px-2 py-3 text-[14px] font-light focus:outline-none focus:border-[#0f1115] text-gray-500 transition-colors appearance-none" defaultValue="Any">
-                    <option>Any</option>
-                    <option>In-Call</option>
-                    <option>Out-Call</option>
-                  </select>
-                  
-                  <div className="flex items-center gap-3 pt-4">
-                    <div className="relative flex items-center justify-center w-4 h-4">
-                       <input type="checkbox" id="newsletter" className="peer w-4 h-4 opacity-0 absolute cursor-pointer" />
-                       <div className="w-4 h-4 border border-gray-300 bg-white peer-checked:bg-[#0f1115] peer-checked:border-[#0f1115] transition-colors flex items-center justify-center">
-                          <CheckCircle size={12} className="text-white opacity-0 peer-checked:opacity-100" />
-                       </div>
-                    </div>
-                    <label htmlFor="newsletter" className="text-[13px] text-gray-500 cursor-pointer user-select-none font-light">Sign me up for the catalog newsletter.</label>
-                  </div>
-                  
-                  <div className="pt-6">
-                    <button type="submit" className="bg-[#0f1115] hover:bg-[#1a1d24] text-[#d4af37] px-8 py-3.5 text-[11px] font-bold tracking-widest uppercase transition-colors w-full border border-[#0f1115]">
-                      Submit Details
-                    </button>
-                  </div>
-                  
-                  <p className="text-center text-[12px] text-gray-400 pt-4 font-light">
-                    We <strong>never</strong> index or share your credentials setup.
-                  </p>
-                </form>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 p-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="w-12 h-12 rounded-full border-2 border-[#d4af37] flex items-center justify-center mx-auto mb-4 bg-white">
-                    <CheckCircle size={20} className="text-[#d4af37] animate-bounce" />
-                  </div>
-                  <h4 className="text-[18px] font-serif font-bold text-[#0f1115] mb-2">Request Received Successfully!</h4>
-                  <p className="text-[13.5px] text-gray-500 font-light leading-relaxed mb-6">
-                    Thank you, {formName}! We have registered your inquiry and custom packages matching your location will be dispatched to {formEmail} shortly.
-                  </p>
-                  <button 
-                    onClick={() => { setFormSubmitted(false); setFormName(''); setFormEmail(''); }}
-                    className="bg-[#0f1115] hover:bg-[#1a1d24] text-[#d4af37] px-8 py-2.5 text-[11px] font-bold tracking-widest uppercase transition-colors"
-                  >
-                    Send Another Response
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </section>
     </div>
