@@ -1,0 +1,24 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Block search engines from crawling search queries or private routes
+Disallow: /*?*
+Disallow: /admin/
+Disallow: /private/
+
+# Explicitly allow AI/LLM bots to read the site for modern search engines (like ChatGPT Search, Perplexity)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Point directly to the sitemap for faster indexing
+Sitemap: https://ainavip.vercel.app/sitemap.xml
