@@ -21,4 +21,4 @@ User-agent: anthropic-ai
 Allow: /
 
 # Point directly to the sitemap for faster indexing
-Sitemap: https://ainavip.vercel.app/sitemap.xml
+Sitemap: https://www.alinavip.in/sitemap.xml
